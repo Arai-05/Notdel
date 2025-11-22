@@ -13,7 +13,7 @@
         android:theme="@style/Theme.Notdel">
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDMqxRA4-wRQj67a55DC4QpbvJztzT2USE" />
+            android:value="API_KEY" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
