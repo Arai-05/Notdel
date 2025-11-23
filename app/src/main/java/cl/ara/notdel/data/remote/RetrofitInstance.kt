@@ -4,7 +4,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
-    private const val BASE_URL = "https://x8ki-letl-twmt.n7.xano.io/api:2nvAVXKA"
+    private const val BASE_URL = "https://x8ki-letl-twmt.n7.xano.io/api:2nvAVXKA/"
 
     val api: NotebookApiService by lazy {
         Retrofit.Builder()
