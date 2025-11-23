@@ -14,7 +14,7 @@ data class Notebook(
     val ram: String,
     val almacenamiento: String,
     val pantalla: String,
-    val gpu: String,
+    val gpu: List<String>,
     val bateria: String,
 
     // Serializacion de variables
