@@ -1,6 +1,5 @@
 package cl.ara.notdel.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,11 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import cl.ara.notdel.model.Notebook
+import cl.ara.notdel.data.model.Notebook
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,8 +50,8 @@ fun NotebookDetailScreen(
                     .verticalScroll(rememberScrollState()), // Habilita el scroll
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    painter = painterResource(id = notebook.imagenResId),
+                AsyncImage(
+                    model = notebook.imagenUrl,
                     contentDescription = notebook.modelo,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -98,7 +97,7 @@ fun NotebookDetailScreen(
                     SpecRow(label = "RAM", value = notebook.ram)
                     SpecRow(label = "Almacenamiento", value = notebook.almacenamiento)
                     SpecRow(label = "Pantalla", value = notebook.pantalla)
-                    SpecRow(label = "GPU", value = notebook.gpu)
+                    SpecRow(label = "GPU", value = notebook.gpu.joinToString(separator = "\n") { "• $it" })
                     SpecRow(label = "Batería", value = notebook.bateria)
                     SpecRow(label = "Sistema Operativo", value = notebook.sistemaOperativo)
 

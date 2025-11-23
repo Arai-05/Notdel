@@ -1,6 +1,5 @@
 package cl.ara.notdel.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -20,12 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cl.ara.notdel.model.Notebook
+import cl.ara.notdel.data.model.Notebook
 import cl.ara.notdel.viewmodel.NotebookViewModel
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +34,8 @@ fun NotebookListScreen(
     viewModel: NotebookViewModel,
     onNotebookClick: (Notebook) -> Unit // Función para manejar el clic en un item
 ) {
+    val isCargando by viewModel.isCargando.observeAsState(initial = false)
+    val mensajeError by viewModel.mensajeError.observeAsState(initial = null)
 
     // Cada vez que la lista en la BD cambie, esta variable se actualizará y la UI se redibujará.
     val notebooks by viewModel.allNotebooks.observeAsState(initial = emptyList())
@@ -52,31 +55,68 @@ fun NotebookListScreen(
         }
     ) { paddingValues ->
 
-        // LISTA PRINCIPAL
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp) // Espacio entre ítems
-        ) {
-
-            item {
-                // TITULAR DE LA LISTA
-                Text(
-                    text = "Equipos Disponibles",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
-                )
+        // Estados
+        if (isCargando) {
+            // Estado 1: Cargando (Círculo en el centro)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
 
-            items(notebooks) { notebook ->
-                NotebookItem(notebook = notebook, onNotebookClick = onNotebookClick)
+        } else if (mensajeError != null) {
+            // Estado 2: Error (Mensaje en rojo en el centro)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Ocurrió un error:\n$mensajeError",
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        } else {
+            // Estado 3: normal
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                item {
+                    // TITULAR DE LA LISTA
+                    Text(
+                        text = "Equipos Disponibles",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
+                    )
+                }
+
+                // Xano responde pero la lista está vacía
+                if (notebooks.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
+                            Text("No hay notebooks en el sistema actualmente.")
+                        }
+                    }
+                }
+
+                items(notebooks) { notebook ->
+                    NotebookItem(notebook = notebook, onNotebookClick = onNotebookClick)
+                }
             }
         }
     }
 }
-
 
 // Este es el Composable para un solo item de la lista.
 @Composable
@@ -99,8 +139,8 @@ fun NotebookItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // Imagen del Notebook
-            Image(
-                painter = painterResource(id = notebook.imagenResId),
+            AsyncImage(
+                model = notebook.imagenUrl,
                 contentDescription = notebook.modelo,
                 modifier = Modifier
                     .size(150.dp)
