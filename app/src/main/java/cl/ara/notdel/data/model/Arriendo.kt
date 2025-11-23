@@ -9,6 +9,9 @@ data class Arriendo(
     val rentalId: Int = 0,
     val notebookId: Int,
 
+    // Id de xano
+    val idXano: Int,
+
     // Campos del formulario
     val userNombre: String,
     val userEmail: String,
