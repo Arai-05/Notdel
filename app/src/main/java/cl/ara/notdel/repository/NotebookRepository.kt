@@ -1,84 +1,84 @@
 package cl.ara.notdel.repository
 
-import androidx.lifecycle.LiveData
-import cl.ara.notdel.model.Notebook
-import cl.ara.notdel.model.NotebookDao
-
-import cl.ara.notdel.R
-import cl.ara.notdel.model.Arriendo
-import cl.ara.notdel.model.ArriendoDao
+import cl.ara.notdel.data.model.Notebook
+import cl.ara.notdel.data.model.Arriendo
+import cl.ara.notdel.data.model.ArriendoDao
+import cl.ara.notdel.data.model.ArriendoRequest
+import cl.ara.notdel.data.remote.NotebookApiService
+import kotlinx.coroutines.flow.Flow
 
 class NotebookRepository(
-    private val notebookDao: NotebookDao,
+    private val api: NotebookApiService,
     private val arriendoDao: ArriendoDao
 )
 {
-    val allNotebooks: LiveData<List<Notebook>> = notebookDao.getAllNotebooks()
-
-    suspend fun addArriendo(Arriendo: Arriendo) {
-        arriendoDao.insertarArriendo(Arriendo)
+    // catalogo de notebooks
+    suspend fun obtenerNotebooksApi(): List<Notebook> {
+        try {
+            return api.getAllNotebooks()
+        } catch (e: Exception) {
+            return emptyList()
+            println("Error al obtener los notebooks de la API: $e")
+        }
     }
 
-    suspend fun updateNotebookDisponibilidad(notebook: Notebook) {
-        notebookDao.updateNotebook(notebook)
+    // historial de mis arriendos
+    fun obtenerMisArriendos(): Flow<List<Arriendo>> {
+        return arriendoDao.obtenerMisArriendos()
     }
-    suspend fun populateInitialDataIfNeeded() {
-        if (notebookDao.getCount() == 0) {
-            val notebooksIniciales = listOf(
-                Notebook(
-                    marca = "ASUS",
-                    modelo = "ROG Strix Scar 18 G835LX-SA135W",
-                    procesador = "Intel Core Ultra 9 275HX (2100 MHz - 5400 MHz)",
-                    ram = "64 GB DDR5 (5600 MHz)",
-                    almacenamiento = "SSD 2 TB",
-                    pantalla = "LED 18.0\" (2560x1600) / 240 Hz",
-                    gpu = "NVIDIA GeForce RTX 5090 (24 GB)",
-                    sistemaOperativo = "Microsoft Windows 11 Home",
-                    bateria = "90000 mWh",
-                    precioDia = 65000,
-                    imagenResId = R.drawable.notdel_rog_strix_scar_18
-                ),
-                Notebook(
-                    marca = "ASUS",
-                    modelo = "TUF Gaming A15 FA507NVR-LP005W",
-                    procesador = "AMD Ryzen 7 7435HS (3100 MHz - 4500 MHz)",
-                    ram = "16 GB DDR5 (4800 MHz)",
-                    almacenamiento = "SSD 512 GB",
-                    pantalla = "LED 15.6\" (1920x1080) / 144 Hz",
-                    gpu = "NVIDIA GeForce RTX 4060 (8 GB)",
-                    sistemaOperativo = "Microsoft Windows 11 Home",
-                    bateria = "94000 mWh",
-                    precioDia = 25000,
-                    imagenResId = R.drawable.notdel_asus_tuf_gaming_a15
-                ),
-                Notebook(
-                    marca = "HP",
-                    modelo = "15-DW1512LA",
-                    procesador = "Intel Pentium Silver N5030 (1100 MHz - 3100 MHz)",
-                    ram = "4 GB DDR4 (2400 MHz)",
-                    almacenamiento = "SSD 128 GB",
-                    pantalla = "LED 15.6\" (1366x768) / 60 Hz",
-                    gpu = "Intel UHD Graphics 605 (Integrada)",
-                    sistemaOperativo = "Microsoft Windows 10 Home",
-                    bateria = "41000 mWh",
-                    precioDia = 7000,
-                    imagenResId = R.drawable.notdel_hp_15
-                ),
-                Notebook(
-                    marca = "Lenovo",
-                    modelo = "IdeaPad Slim 3 14IRH10",
-                    procesador = "Intel Core i5-13420H (1500 MHz - 4600 MHz)",
-                    ram = "8 GB DDR5 (4800 MHz)",
-                    almacenamiento = "SSD 512 GB",
-                    pantalla = "LED 14.0\" (1920x1200) / 60 Hz",
-                    gpu = "Intel UHD Graphics Xe G4 48EUs (Integrada)",
-                    sistemaOperativo = "Microsoft Windows 11 Home",
-                    bateria = "60000 mWh",
-                    precioDia = 11000,
-                    imagenResId = R.drawable.notdel_lenovo_ideapad_slim
-                )
+
+    // confirmar arriendo
+    suspend fun confirmarArriendo(
+        requestDto: ArriendoRequest, // datos para mandarlos a xano
+        notebookInfo: Notebook // datos para guardar en la copia local
+    ) {
+        // hacer el post
+        val respuesta = api.crearArriendo(requestDto)
+
+        if (respuesta.isSuccessful && respuesta.body() != null) {
+
+            // tomar id real del xano
+            val idRemotoXano = respuesta.body()!!.id
+
+            // actualizar la disponibilidad del notebook
+            api.actualizarDisponibilidad(requestDto.notebookId, mapOf("disponible" to false))
+
+            // guardar el arriendo en la copia local
+            val nuevoArriendoLocal = Arriendo(
+                idXano          = idRemotoXano,
+                notebookId      = requestDto.notebookId,
+                totalDias       = requestDto.totalDias,
+                fechaRenta      = requestDto.fechaRenta,
+
+                // datos del usuario
+                userNombre      = requestDto.userNombre,
+                userEmail       = requestDto.userEmail,
+                userTelefono    = requestDto.userTelefono,
+                userDireccion   = requestDto.userDireccion,
+                userEdad        = requestDto.userEdad,
+
+                terminosAceptados = true
             )
-            notebookDao.insertAll(notebooksIniciales)
+            arriendoDao.insertarArriendo(nuevoArriendoLocal)
+
+        } else {
+            throw Exception("Error al procesar el arriendo en el servidor")
+        }
+    }
+
+    suspend fun cancelarArriendo(arriendo: Arriendo) {
+
+        // borrarlo de xano con el id remoto
+        val respuesta = api.eliminarArriendo(arriendo.idXano)
+
+        if (respuesta.isSuccessful) {
+            // cambiar la disponibilidad del notebook a true
+            api.actualizarDisponibilidad(arriendo.notebookId, mapOf("disponible" to true))
+
+            // borrarlo de la base de datos local
+            arriendoDao.eliminarArriendo(arriendo)
+        } else {
+            throw Exception("No se pudo cancelar el arriendo en el servidor")
         }
     }
 }
