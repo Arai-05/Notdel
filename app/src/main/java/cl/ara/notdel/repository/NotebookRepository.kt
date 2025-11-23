@@ -1,5 +1,6 @@
 package cl.ara.notdel.repository
 
+import android.util.Log
 import cl.ara.notdel.data.model.Notebook
 import cl.ara.notdel.data.model.Arriendo
 import cl.ara.notdel.data.model.ArriendoDao
@@ -17,8 +18,9 @@ class NotebookRepository(
         try {
             return api.getAllNotebooks()
         } catch (e: Exception) {
+            Log.e("INFO_API","Error al obtener los notebooks de la API: ${e}")
+            e.printStackTrace()
             return emptyList()
-            println("Error al obtener los notebooks de la API: $e")
         }
     }
 
