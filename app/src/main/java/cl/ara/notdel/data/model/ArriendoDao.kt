@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ArriendoDao {
@@ -12,7 +13,7 @@ interface ArriendoDao {
     suspend fun insertarArriendo(arriendo: Arriendo)
 
     @Query("SELECT * FROM Arriendo ORDER BY rentalId DESC")
-    suspend fun obtenerMisArriendos(): List<Arriendo>
+    suspend fun obtenerMisArriendos(): Flow<List<Arriendo>>
 
     @Delete
     suspend fun eliminarArriendo(arriendo: Arriendo)
