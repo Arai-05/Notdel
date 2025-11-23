@@ -1,4 +1,4 @@
-package cl.ara.notdel.model
+package cl.ara.notdel.data.model
 
 import android.content.Context
 import androidx.room.Database
@@ -7,8 +7,6 @@ import androidx.room.RoomDatabase
 
 @Database(entities = [Notebook::class, Arriendo::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
-
-    abstract fun notebookDao(): NotebookDao
     abstract fun arriendoDao(): ArriendoDao
 
     companion object {
