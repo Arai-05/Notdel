@@ -13,7 +13,7 @@ interface ArriendoDao {
     suspend fun insertarArriendo(arriendo: Arriendo)
 
     @Query("SELECT * FROM Arriendo ORDER BY rentalId DESC")
-    suspend fun obtenerMisArriendos(): Flow<List<Arriendo>>
+    fun obtenerMisArriendos(): Flow<List<Arriendo>>
 
     @Delete
     suspend fun eliminarArriendo(arriendo: Arriendo)
