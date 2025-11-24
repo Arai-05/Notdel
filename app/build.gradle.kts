@@ -93,6 +93,8 @@ dependencies {
 
     // Corrutinas
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
 }
 
 kapt {
