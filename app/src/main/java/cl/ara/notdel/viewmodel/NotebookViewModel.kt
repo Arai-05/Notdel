@@ -4,8 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import cl.ara.notdel.data.model.AppDatabase
+import cl.ara.notdel.data.model.Arriendo
 import cl.ara.notdel.data.model.ArriendoRequest
 import cl.ara.notdel.data.model.Notebook
 import cl.ara.notdel.data.remote.RetrofitInstance
@@ -21,7 +23,8 @@ private data class DataArriendoTemp(
     val userEmail: String,
     val userTelefono: String,
     val userDireccion: String,
-    val userEdad: Int
+    val userEdad: Int,
+    val totalDias: Int
 )
 class NotebookViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: NotebookRepository
@@ -74,14 +77,16 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
         email: String,
         telefono: String,
         direccion: String,
-        edad: Int
+        edad: Int,
+        totalDias: Int
     ) {
         DataArriendoTemp = DataArriendoTemp(
             nombre,
             email,
             telefono,
             direccion,
-            edad
+            edad,
+            totalDias
         )
     }
 
@@ -91,7 +96,7 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
     }
 
     // Finalizar Arriendo, llamado por la pantalla de acuerdo
-    fun finalizarArriendo(notebookId: Int, totalDias: Int) = viewModelScope.launch {
+    fun finalizarArriendo(notebookId: Int) = viewModelScope.launch {
 
         // Obtener los datos temporales
         val data = DataArriendoTemp ?: return@launch
@@ -105,7 +110,7 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
             // Crear el request para xano
             val requestXano = ArriendoRequest(
                 notebookId = notebookId,
-                totalDias = totalDias,
+                totalDias = data.totalDias,
                 fechaRenta = fechaActual,
                 userNombre = data.userNombre,
                 userEmail = data.userEmail,
@@ -135,4 +140,24 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
             _isCargando.value = false
         }
     }
+
+    // Mis arriendos
+    val misArriendos = repository.obtenerMisArriendos().asLiveData()
+
+    // Devolver arriendo
+    fun devolverArriendo(arriendo: Arriendo) = viewModelScope.launch {
+        _isCargando.value = true
+        try {
+            // llamar al repo
+            repository.cancelarArriendo(arriendo)
+
+            // recarga la lista de notebooks para que vuelva a salir disponible
+            cargarNotebooks()
+        } catch (e: Exception) {
+            _mensajeError.value = "Error al devolver arriendo: ${e.message}"
+        } finally {
+            _isCargando.value = false
+        }
+    }
+
 }
