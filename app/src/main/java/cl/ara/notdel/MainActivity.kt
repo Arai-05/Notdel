@@ -12,9 +12,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import cl.ara.notdel.model.Notebook
+import cl.ara.notdel.data.model.Notebook
 import cl.ara.notdel.ui.screens.AcuerdoScreen
 import cl.ara.notdel.ui.screens.FormArriendoScreen
+import cl.ara.notdel.ui.screens.MisArriendosScreen
 import cl.ara.notdel.ui.screens.NotebookDetailScreen
 import cl.ara.notdel.ui.screens.NotebookListScreen
 import cl.ara.notdel.ui.theme.NotdelTheme
@@ -22,11 +23,12 @@ import cl.ara.notdel.viewmodel.NotebookViewModel
 import cl.ara.notdel.ui.screens.UbicacionRetiroScreen
 
 enum class Screen {
-    LIST,       // Pantalla principal con la lista de notebooks.
-    DETAIL,     // Pantalla con los detalles de un notebook seleccionado.
-    FORM,       // Pantalla de formulario para ingresar datos del arrendatario.
-    AGREEMENT,  // Pantalla para revisar y aceptar el contrato.
-    MAP         // Pantalla para ver la ubicacion de los puntos de retiro del notebook
+    LIST,           // Pantalla principal con la lista de notebooks.
+    DETAIL,         // Pantalla con los detalles de un notebook seleccionado.
+    FORM,           // Pantalla de formulario para ingresar datos del arrendatario.
+    AGREEMENT,      // Pantalla para revisar y aceptar el contrato.
+    MAP,            // Pantalla para ver la ubicacion de los puntos de retiro del notebook
+    MIS_ARRIENDOS   // Pantalla para ver los arriendos realizados
 }
 
 class MainActivity : ComponentActivity() {
@@ -56,6 +58,10 @@ class MainActivity : ComponentActivity() {
                                 onNotebookClick = { notebook ->
                                     selectedNotebook = notebook
                                     currentScreen = Screen.DETAIL
+                                },
+
+                                onIrMisArriendos = {
+                                    currentScreen = Screen.MIS_ARRIENDOS
                                 }
                             )
                         }
@@ -124,6 +130,22 @@ class MainActivity : ComponentActivity() {
                             }
 
                             UbicacionRetiroScreen()
+                        }
+
+                        // PANTALLA DE MIS ARRIENDOS
+                        Screen.MIS_ARRIENDOS -> {
+                            // Si presiona "atrás" en el celular, vuelve al inicio
+                            androidx.activity.compose.BackHandler {
+                                currentScreen = Screen.LIST
+                            }
+
+                            MisArriendosScreen(
+                                viewModel = notebookViewModel,
+                                onVolverClick = {
+                                    // Si presiona "Atras", vuelve al inicio
+                                    currentScreen = Screen.LIST
+                                }
+                            )
                         }
                     }
                 }
