@@ -5,10 +5,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,7 +36,8 @@ import coil.compose.AsyncImage
 @Composable
 fun NotebookListScreen(
     viewModel: NotebookViewModel,
-    onNotebookClick: (Notebook) -> Unit // Función para manejar el clic en un item
+    onNotebookClick: (Notebook) -> Unit, // Función para manejar el clic en un item
+    onIrMisArriendos: () -> Unit
 ) {
     val isCargando by viewModel.isCargando.observeAsState(initial = false)
     val mensajeError by viewModel.mensajeError.observeAsState(initial = null)
@@ -50,7 +55,14 @@ fun NotebookListScreen(
                         modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.Center),
                         fontWeight = FontWeight.Bold
                     )
+                },
+                actions = {
+                    // Boton para ir a los arriendos
+                    IconButton(onClick = onIrMisArriendos) {
+                        Icon(Icons.Default.ShoppingCart, contentDescription = "Mis Arriendos")
+                    }
                 }
+
             )
         }
     ) { paddingValues ->
