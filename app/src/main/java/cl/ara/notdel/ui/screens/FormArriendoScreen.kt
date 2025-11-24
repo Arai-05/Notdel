@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import cl.ara.notdel.model.Notebook
+import cl.ara.notdel.data.model.Notebook
 import cl.ara.notdel.viewmodel.NotebookViewModel
 
 
@@ -29,6 +29,7 @@ fun FormArriendoScreen(
     var userTelefono by remember { mutableStateOf("") }
     var userDireccion by remember { mutableStateOf("") }
     var userEdad by remember { mutableStateOf("") }
+    var diasPrestamo by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     Scaffold(
@@ -76,31 +77,50 @@ fun FormArriendoScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
 
-            OutlinedTextField(
-                value = userEdad, onValueChange = { userEdad = it },
-                label = { Text("Edad") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done)
-            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(
+                    value = userEdad,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) userEdad = it },
+                    label = { Text("Edad") },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                )
+
+                OutlinedTextField(
+                    value = diasPrestamo,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) diasPrestamo = it },
+                    label = { Text("Días a arrendar") },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done)
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
                     val ageInt = userEdad.toIntOrNull()
+                    val diasInt = diasPrestamo.toIntOrNull() // <--- Convertimos a número
 
-                    if (userNombre.isBlank() || userEmail.isBlank() || userTelefono.isBlank() || userDireccion.isBlank() || ageInt == null) {
+                    // Validaciones
+                    if (userNombre.isBlank() || userEmail.isBlank() || userTelefono.isBlank() || userDireccion.isBlank() || ageInt == null || diasInt == null) {
                         Toast.makeText(context, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
+                    } else if (userEmail.contains("@")) {
+                        Toast.makeText(context, "El email debe tener @", Toast.LENGTH_SHORT).show()
                     } else if (ageInt < 18) {
                         Toast.makeText(context, "Debes ser mayor de edad para arrendar", Toast.LENGTH_SHORT).show()
+                    } else if (diasInt < 1) {
+                        Toast.makeText(context, "El arriendo debe ser por al menos 1 día", Toast.LENGTH_SHORT).show()
                     } else {
 
+                        // Guarda en el ViewModel
                         viewModel.cacheDataArriendo(
                             nombre = userNombre,
                             email = userEmail,
                             telefono = userTelefono,
                             direccion = userDireccion,
-                            edad = ageInt
+                            edad = ageInt,
+                            totalDias = diasInt
                         )
 
                         onNextClick()
