@@ -105,7 +105,7 @@ fun FormArriendoScreen(
                     // Validaciones
                     if (userNombre.isBlank() || userEmail.isBlank() || userTelefono.isBlank() || userDireccion.isBlank() || ageInt == null || diasInt == null) {
                         Toast.makeText(context, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
-                    } else if (userEmail.contains("@")) {
+                    } else if (!userEmail.contains("@")) {
                         Toast.makeText(context, "El email debe tener @", Toast.LENGTH_SHORT).show()
                     } else if (ageInt < 18) {
                         Toast.makeText(context, "Debes ser mayor de edad para arrendar", Toast.LENGTH_SHORT).show()
