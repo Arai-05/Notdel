@@ -94,7 +94,21 @@ dependencies {
     // Corrutinas
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    // Iconos extendidos
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
+
+    // Activity Compose para lanzar la camara
+    implementation("androidx.activity:activity-compose:1.12.1")
+
+    // CameraX para Camara personalizada
+    implementation("androidx.camera:camera-core:1.5.0")
+    implementation("androidx.camera:camera-camera2:1.5.0")
+    implementation("androidx.camera:camera-lifecycle:1.5.0")
+    implementation("androidx.camera:camera-view:1.5.0")
+    implementation("androidx.camera:camera-extensions:1.5.0")
+
+    // Lector de texto
+    implementation("com.google.mlkit:text-recognition:16.0.0")
 }
 
 kapt {
