@@ -21,6 +21,7 @@ import cl.ara.notdel.ui.screens.NotebookListScreen
 import cl.ara.notdel.ui.theme.NotdelTheme
 import cl.ara.notdel.viewmodel.NotebookViewModel
 import cl.ara.notdel.ui.screens.UbicacionRetiroScreen
+import cl.ara.notdel.viewmodel.EscaneoViewModel
 
 enum class Screen {
     LIST,           // Pantalla principal con la lista de notebooks.
@@ -33,6 +34,8 @@ enum class Screen {
 
 class MainActivity : ComponentActivity() {
     private val notebookViewModel: NotebookViewModel by viewModels()
+    private val escaneoViewModel: EscaneoViewModel by viewModels()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,7 +96,8 @@ class MainActivity : ComponentActivity() {
                             selectedNotebook?.let { notebook ->
                                 FormArriendoScreen(
                                     notebook = notebook,
-                                    viewModel = notebookViewModel,
+                                    notebookViewModel = notebookViewModel,
+                                    escaneoViewModel =  escaneoViewModel,
                                     onNextClick = {
                                         currentScreen = Screen.AGREEMENT // Navega al acuerdo
                                     }
