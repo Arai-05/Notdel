@@ -18,6 +18,7 @@ import cl.ara.notdel.ui.screens.FormArriendoScreen
 import cl.ara.notdel.ui.screens.MisArriendosScreen
 import cl.ara.notdel.ui.screens.NotebookDetailScreen
 import cl.ara.notdel.ui.screens.NotebookListScreen
+import cl.ara.notdel.ui.screens.ResumenArriendoScreen
 import cl.ara.notdel.ui.theme.NotdelTheme
 import cl.ara.notdel.viewmodel.NotebookViewModel
 import cl.ara.notdel.ui.screens.UbicacionRetiroScreen
@@ -29,7 +30,8 @@ enum class Screen {
     FORM,           // Pantalla de formulario para ingresar datos del arrendatario.
     AGREEMENT,      // Pantalla para revisar y aceptar el contrato.
     MAP,            // Pantalla para ver la ubicacion de los puntos de retiro del notebook
-    MIS_ARRIENDOS   // Pantalla para ver los arriendos realizados
+    MIS_ARRIENDOS,  // Pantalla para ver los arriendos realizados
+    RESUMEN         // Pantalla para ver el resumen previo al arriendo
 }
 
 class MainActivity : ComponentActivity() {
@@ -99,17 +101,36 @@ class MainActivity : ComponentActivity() {
                                     notebookViewModel = notebookViewModel,
                                     escaneoViewModel =  escaneoViewModel,
                                     onNextClick = {
+                                        currentScreen = Screen.RESUMEN // Navega al resumen
+                                    }
+                                )
+                            }
+                        }
+
+                        // PANTALLA DE RESUMEN
+                        Screen.RESUMEN -> {
+                            // Al presionar 'atras', vuelve al formulario
+                            androidx.activity.compose.BackHandler {
+                                currentScreen = Screen.FORM
+                            }
+
+                            selectedNotebook?.let { notebook ->
+                                ResumenArriendoScreen(
+                                    notebook          = notebook,
+                                    notebookViewModel = notebookViewModel,
+                                    onConfirmar = {
                                         currentScreen = Screen.AGREEMENT // Navega al acuerdo
                                     }
                                 )
                             }
+
                         }
 
                         // PANTALLA DE ACUERDO
                         Screen.AGREEMENT -> {
                             // Al presionar 'atrás', vuelve al formulario para editar datos
                             androidx.activity.compose.BackHandler {
-                                currentScreen = Screen.FORM
+                                currentScreen = Screen.RESUMEN
                             }
 
                             // asegura de tener el ID del notebook para finalizar el arriendo
@@ -120,6 +141,10 @@ class MainActivity : ComponentActivity() {
                                     onAccept = {
                                         selectedNotebook = null
                                         currentScreen = Screen.MAP
+                                    },
+                                    onReject = {
+                                        notebookViewModel.limpiarDatosUsuario()
+                                        currentScreen = Screen.DETAIL
                                     }
                                 )
                             }
