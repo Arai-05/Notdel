@@ -18,7 +18,7 @@ import java.util.Date
 import java.util.Locale
 
 // data class para los datos temporales
-private data class DataArriendoTemp(
+data class DataArriendoTemp(
     val userNombre: String,
     val userEmail: String,
     val userTelefono: String,
@@ -90,9 +90,18 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
+    // Esta funcion es para poder trabajar con los datos para el ResumenArriendoScreen
+    fun obtenerDatosArriendo(): DataArriendoTemp? {
+        return DataArriendoTemp
+    }
+
     fun getCachedUserNombre(): String? {
         // Devolver el nombre de usuario de los datos temporales
         return DataArriendoTemp?.userNombre
+    }
+
+    fun limpiarDatosUsuario() {
+        DataArriendoTemp = null
     }
 
     // Finalizar Arriendo, llamado por la pantalla de acuerdo
@@ -130,7 +139,7 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
                 cargarNotebooks()
 
                 // Limpiar datos temporales
-                DataArriendoTemp = null
+                limpiarDatosUsuario()
             } else {
                 _mensajeError.value = "Error: No se encontro el notebook seleccionado"
             }
