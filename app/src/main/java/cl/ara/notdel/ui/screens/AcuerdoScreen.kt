@@ -1,11 +1,13 @@
 package cl.ara.notdel.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cl.ara.notdel.viewmodel.NotebookViewModel
@@ -15,8 +17,11 @@ import cl.ara.notdel.viewmodel.NotebookViewModel
 fun AcuerdoScreen(
     notebookId: Int,
     viewModel: NotebookViewModel,
-    onAccept: () -> Unit
+    onAccept: () -> Unit,
+    onReject: () -> Unit
 ) {
+
+    val context = LocalContext.current
 
     val nombre = viewModel.getCachedUserNombre() ?: "el Arrendatario"
 
@@ -95,14 +100,30 @@ fun AcuerdoScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    viewModel.finalizarArriendo(notebookId)
-                    onAccept()
-                },
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp) // Espacio entre botones
             ) {
-                Text("Aceptar Terminos y Confirmar Arriendo")
+                // Boton de Rechazo
+                OutlinedButton(
+                    onClick  = {
+                        Toast.makeText(context, "Arriendo Cancelado, sus datos fueron eliminados", Toast.LENGTH_SHORT).show()
+                        onReject()
+                    },
+                    modifier = Modifier.weight(1f).height(50.dp)
+                ) {
+                    Text("No Acepto")
+                }
+
+                Button(
+                    onClick = {
+                        viewModel.finalizarArriendo(notebookId)
+                        onAccept()
+                    },
+                    modifier = Modifier.weight(1f).height(50.dp)
+                ) {
+                    Text("Acepto")
+                }
             }
         }
     }
