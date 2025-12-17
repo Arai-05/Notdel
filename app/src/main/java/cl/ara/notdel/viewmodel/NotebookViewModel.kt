@@ -1,6 +1,7 @@
 package cl.ara.notdel.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,9 +10,13 @@ import androidx.lifecycle.viewModelScope
 import cl.ara.notdel.data.model.AppDatabase
 import cl.ara.notdel.data.model.Arriendo
 import cl.ara.notdel.data.model.ArriendoRequest
+import cl.ara.notdel.data.model.EstadoArriendo
 import cl.ara.notdel.data.model.Notebook
+import cl.ara.notdel.data.remote.EstadoBody
 import cl.ara.notdel.data.remote.RetrofitInstance
 import cl.ara.notdel.repository.NotebookRepository
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -52,12 +57,13 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
         // Conexion con xano (api) y el room de arriendo
         repository = NotebookRepository(RetrofitInstance.api, arriendoDao)
 
-        cargarNotebooks()
+        cargarNotebooks(mostrarCarga = true)
+        iniciarAutoRefresco()
     }
 
-    fun cargarNotebooks() {
+    fun cargarNotebooks(mostrarCarga: Boolean = true) {
         viewModelScope.launch {
-            _isCargando.value = true
+            if (mostrarCarga) _isCargando.value = true
             try {
                 // Llamar a la api desde el repo
                 val lista = repository.obtenerNotebooksApi()
@@ -68,6 +74,15 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
             } finally {
                 _isCargando.value = false
             }
+        }
+    }
+
+    private fun iniciarAutoRefresco() = viewModelScope.launch {
+        while (isActive) { // Mientras el ViewModel esté vivo (la app corriendo)
+            delay(4000) // Espera 4 segundos
+
+            // Recarga los datos
+            cargarNotebooks(mostrarCarga = false)
         }
     }
 
@@ -149,7 +164,6 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
             _isCargando.value = false
         }
     }
-
     // Mis arriendos
     val misArriendos = repository.obtenerMisArriendos().asLiveData()
 
@@ -168,5 +182,43 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
             _isCargando.value = false
         }
     }
+
+    // Cuando el usuario ingresa el codigo 600900 correctamente
+    fun confirmarRetiroExitoso(arriendo: Arriendo) = viewModelScope.launch {
+        _isCargando.value = true
+        try {
+            // Llamamos a Xano para cambiar el estado a ARRENDADO (Azul)
+            val estadoBody = EstadoBody(EstadoArriendo.ARRENDADO)
+            repository.actualizarEstadoEnXano(arriendo.notebookId, estadoBody)
+
+            // Recargamos la lista para que se actualice la UI
+            cargarNotebooks()
+        } catch (e: Exception) {
+            _mensajeError.value = "Error al confirmar retiro: ${e.message}"
+        } finally {
+            _isCargando.value = false
+        }
+    }
+
+    // Bloquea el notebook para que nadie mas lo tome cuando alguien este arrendandolo
+    fun reservarNotebook(id: Int) = viewModelScope.launch {
+        try {
+            val body = EstadoBody(EstadoArriendo.RESERVANDO)
+            repository.actualizarEstadoEnXano(id, body)
+        } catch (e: Exception) {
+            Log.e("API", "No se pudo reservar: ${e.message}")
+        }
+    }
+
+    // Libera el note si se sale del formulario
+    fun liberarNotebook(id: Int) = viewModelScope.launch {
+        try {
+            val body = EstadoBody(EstadoArriendo.DISPONIBLE)
+            repository.actualizarEstadoEnXano(id, body)
+        } catch (e: Exception) {
+            Log.e("API", "No se pudo liberar: ${e.message}")
+        }
+    }
+
 
 }
