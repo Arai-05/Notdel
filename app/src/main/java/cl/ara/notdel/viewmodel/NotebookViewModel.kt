@@ -32,8 +32,12 @@ data class DataArriendoTemp(
     val userEdad: Int,
     val totalDias: Int
 )
-class NotebookViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: NotebookRepository
+class NotebookViewModel(application: Application, private val testRepository: NotebookRepository? = null) : AndroidViewModel(application) {
+    private val repository: NotebookRepository = testRepository ?: run {
+        // Si no hay testRepository usa la lógica normal
+        val db = AppDatabase.getDatabase(application)
+        NotebookRepository(RetrofitInstance.api, db.arriendoDao())
+    }
 
     // Lista de notebooks
     // _notebooks es privado y modificable. notebooks es publico y solo lectura
@@ -55,12 +59,6 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
     var isPantallaActiva = mutableStateOf(true)
 
     init {
-        val db = AppDatabase.getDatabase(application)
-        val arriendoDao = db.arriendoDao()
-
-        // Conexion con xano (api) y el room de arriendo
-        repository = NotebookRepository(RetrofitInstance.api, arriendoDao)
-
         cargarNotebooks(mostrarCarga = true)
         iniciarAutoRefresco()
     }
