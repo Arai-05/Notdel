@@ -7,7 +7,7 @@ data class Notebook(
     val id: Int,
     val marca: String,
     val modelo: String,
-    val disponible: Boolean = true,
+    val estado: EstadoArriendo = EstadoArriendo.DISPONIBLE, // Si Xano no manda nada, asumimos DISPONIBLE por seguridad
 
     // ESPECIFICACIONES TECNICAS
     val procesador: String,
