@@ -82,6 +82,9 @@ class MainActivity : ComponentActivity() {
                             NotebookDetailScreen(
                                 notebook = selectedNotebook,
                                 onArrendarClick = {
+                                    selectedNotebook?.let {
+                                        notebookViewModel.reservarNotebook(it.id)
+                                    }
                                     currentScreen = Screen.FORM // Navega al formulario
                                 }
                             )
@@ -91,6 +94,9 @@ class MainActivity : ComponentActivity() {
                         Screen.FORM -> {
                             // Al presionar 'atrás', vuelve al detalle
                             androidx.activity.compose.BackHandler {
+                                selectedNotebook?.let {
+                                    notebookViewModel.liberarNotebook(it.id)
+                                }
                                 currentScreen = Screen.DETAIL
                             }
 
@@ -143,6 +149,7 @@ class MainActivity : ComponentActivity() {
                                         currentScreen = Screen.MAP
                                     },
                                     onReject = {
+                                        notebookViewModel.liberarNotebook(notebook.id)
                                         notebookViewModel.limpiarDatosUsuario()
                                         currentScreen = Screen.DETAIL
                                     }
