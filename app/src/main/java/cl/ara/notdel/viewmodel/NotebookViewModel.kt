@@ -2,6 +2,7 @@ package cl.ara.notdel.viewmodel
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -48,7 +49,10 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
     val mensajeError: LiveData<String?> = _mensajeError
 
     // Datos temporales del formulario
-    private var DataArriendoTemp: DataArriendoTemp? = null
+    private var dataArriendoTemp: DataArriendoTemp? = null
+
+    // Verifica si la pantalla esta activa
+    var isPantallaActiva = mutableStateOf(true)
 
     init {
         val db = AppDatabase.getDatabase(application)
@@ -79,10 +83,51 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
 
     private fun iniciarAutoRefresco() = viewModelScope.launch {
         while (isActive) { // Mientras el ViewModel esté vivo (la app corriendo)
-            delay(4000) // Espera 4 segundos
+            if (!isPantallaActiva.value) {
+                delay(2000)
+                continue
+            }
 
-            // Recarga los datos
-            cargarNotebooks(mostrarCarga = false)
+            delay(5000)
+
+            try {
+                val response = repository.obtenerSoloEstados()
+
+                if (response.isSuccessful) {
+                    val listaEstadosNuevos = response.body() ?: emptyList()
+                    val listaActual = _notebooks.value ?: emptyList()
+
+                    // Actualiza solo el estado
+                    val listaActualizada = listaActual.map { notebook ->
+                        // Busca si hay un estado nuevo para este notebook
+                        val nuevoMini = listaEstadosNuevos.find { it.id == notebook.id }
+
+                        if (nuevoMini != null && nuevoMini.estado != notebook.estado.name) {
+                            // Si cambia crea una copia del notebook con el nuevo estado
+                            val enumEstado = try {
+                                EstadoArriendo.valueOf(nuevoMini.estado)
+                            } catch (e: Exception) {
+                                notebook.estado // Si falla mantiene el viejo
+                            }
+                            notebook.copy(estado = enumEstado)
+                        } else {
+                            // Si no cambio deja el objeto idéntico (
+                            notebook
+                        }
+                    }
+
+                    if (listaActual != listaActualizada) {
+                        _notebooks.value = listaActualizada
+                    }
+
+                } else {
+                    println("Error en refresh ligero: ${response.code()}")
+                    delay(5000)
+                }
+            } catch (e: Exception) {
+                println("Error de red: ${e.message}")
+                delay(10000)
+            }
         }
     }
 
@@ -95,7 +140,7 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
         edad: Int,
         totalDias: Int
     ) {
-        DataArriendoTemp = DataArriendoTemp(
+        dataArriendoTemp = DataArriendoTemp(
             nombre,
             email,
             telefono,
@@ -107,23 +152,23 @@ class NotebookViewModel(application: Application) : AndroidViewModel(application
 
     // Esta funcion es para poder trabajar con los datos para el ResumenArriendoScreen
     fun obtenerDatosArriendo(): DataArriendoTemp? {
-        return DataArriendoTemp
+        return dataArriendoTemp
     }
 
     fun getCachedUserNombre(): String? {
         // Devolver el nombre de usuario de los datos temporales
-        return DataArriendoTemp?.userNombre
+        return dataArriendoTemp?.userNombre
     }
 
     fun limpiarDatosUsuario() {
-        DataArriendoTemp = null
+        dataArriendoTemp = null
     }
 
     // Finalizar Arriendo, llamado por la pantalla de acuerdo
     fun finalizarArriendo(notebookId: Int) = viewModelScope.launch {
 
         // Obtener los datos temporales
-        val data = DataArriendoTemp ?: return@launch
+        val data = dataArriendoTemp ?: return@launch
         _isCargando.value = true
 
         try {
