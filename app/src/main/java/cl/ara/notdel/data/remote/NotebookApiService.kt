@@ -4,6 +4,7 @@ import cl.ara.notdel.data.model.ArriendoRequest
 import cl.ara.notdel.data.model.ArriendoResponse
 import cl.ara.notdel.data.model.EstadoArriendo
 import cl.ara.notdel.data.model.Notebook
+import cl.ara.notdel.data.model.NotebookEstadoMini
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -20,6 +21,10 @@ interface NotebookApiService {
     // Traer los notebooks
     @GET("notebook")
     suspend fun  getAllNotebooks(): List<Notebook>
+
+    // Trae solo los estados
+    @GET("estado_notebook") //
+    suspend fun obtenerSoloEstados(): Response<List<NotebookEstadoMini>>
 
     // Crear arriendo
     @POST("arriendo")
