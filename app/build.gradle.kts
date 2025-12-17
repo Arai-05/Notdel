@@ -112,8 +112,25 @@ dependencies {
 
     // Mapa
     implementation("org.osmdroid:osmdroid-android:6.1.18")
+
+    // Test
+
+    // JUnit 5
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    // MockK (Para crear objetos falsos)
+    testImplementation("io.mockk:mockk:1.13.5")
+    // Kotest (Para afirmaciones legibles)
+    testImplementation("io.kotest:kotest-assertions-core:5.6.2")
+    // Coroutines Test (Para probar runTest y delays)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    // Soporte para LiveData en tests
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 }
 
 kapt {
     correctErrorTypes = true
+}
+
+tasks.withType<org.gradle.api.tasks.testing.Test> {
+    useJUnitPlatform()
 }
