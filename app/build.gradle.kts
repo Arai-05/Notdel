@@ -109,6 +109,9 @@ dependencies {
 
     // Lector de texto
     implementation("com.google.mlkit:text-recognition:16.0.0")
+
+    // Mapa
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
 }
 
 kapt {
