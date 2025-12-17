@@ -1,5 +1,6 @@
 package cl.ara.notdel.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -22,12 +24,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cl.ara.notdel.data.model.EstadoArriendo
 import cl.ara.notdel.data.model.Notebook
 import cl.ara.notdel.viewmodel.NotebookViewModel
 import coil.compose.AsyncImage
@@ -136,10 +140,13 @@ fun NotebookItem(
     notebook: Notebook,
     onNotebookClick: (Notebook) -> Unit
 ) {
+    val estaDisponible = notebook.estado == EstadoArriendo.DISPONIBLE
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onNotebookClick(notebook) },
+            .alpha(if (estaDisponible) 1f else 0.7f)
+            .clickable(enabled = estaDisponible) { onNotebookClick(notebook) },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -155,7 +162,7 @@ fun NotebookItem(
                 model = notebook.imagenUrl,
                 contentDescription = notebook.modelo,
                 modifier = Modifier
-                    .size(150.dp)
+                    .size(160.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Fit
             )
@@ -186,23 +193,29 @@ fun NotebookItem(
                 )
 
                 // Indicador de disponibilidad
-                Spacer(modifier = Modifier.height(4.dp))
-                if (notebook.disponible) {
-                    Text(
-                        text = "DISPONIBLE",
-                        color = androidx.compose.ui.graphics.Color(0xFF4CAF50), // Verde
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Black
-                    )
-                } else {
-                    Text(
-                        text = "ARRENDADO",
-                        color = MaterialTheme.colorScheme.error, // Rojo
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Black
-                    )
-                }
+                Spacer(modifier = Modifier.height(6.dp))
+
+                EstadoBadge(estado = notebook.estado)
             }
         }
+    }
+}
+
+// Componente visual para mostrar la etiqueta de color
+@Composable
+fun EstadoBadge(estado: EstadoArriendo) {
+    Surface(
+        color    = estado.color.copy(alpha = 0.1f),
+        shape    = RoundedCornerShape(4.dp),
+        border   = BorderStroke(1.dp, estado.color),
+        modifier = Modifier.padding(top = 4.dp)
+    ) {
+        Text(
+            text       = estado.textoPublico.uppercase(),
+            color      = estado.color,
+            style      = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            modifier   = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
     }
 }
