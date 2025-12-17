@@ -5,6 +5,8 @@ import cl.ara.notdel.data.model.Notebook
 import cl.ara.notdel.data.model.Arriendo
 import cl.ara.notdel.data.model.ArriendoDao
 import cl.ara.notdel.data.model.ArriendoRequest
+import cl.ara.notdel.data.model.EstadoArriendo
+import cl.ara.notdel.data.remote.EstadoBody
 import cl.ara.notdel.data.remote.NotebookApiService
 import kotlinx.coroutines.flow.Flow
 
@@ -43,7 +45,9 @@ class NotebookRepository(
             val idRemotoXano = respuesta.body()!!.id
 
             // actualizar la disponibilidad del notebook
-            api.actualizarDisponibilidad(requestDto.notebookId, mapOf("disponible" to false))
+            val bodyEstado = EstadoBody(EstadoArriendo.POR_RETIRAR)
+
+            api.actualizarDisponibilidad(requestDto.notebookId, bodyEstado)
 
             // guardar el arriendo en la copia local
             val nuevoArriendoLocal = Arriendo(
@@ -74,13 +78,19 @@ class NotebookRepository(
         val respuesta = api.eliminarArriendo(arriendo.idXano)
 
         if (respuesta.isSuccessful) {
-            // cambiar la disponibilidad del notebook a true
-            api.actualizarDisponibilidad(arriendo.notebookId, mapOf("disponible" to true))
+            // cambiar la disponibilidad del notebook a disponible
+            val bodyEstado = EstadoBody(EstadoArriendo.DISPONIBLE)
+
+            api.actualizarDisponibilidad(arriendo.notebookId, bodyEstado)
 
             // borrarlo de la base de datos local
             arriendoDao.eliminarArriendo(arriendo)
         } else {
             throw Exception("No se pudo cancelar el arriendo en el servidor")
         }
+    }
+
+    suspend fun actualizarEstadoEnXano(id: Int, body: EstadoBody) {
+        api.actualizarDisponibilidad(id, body)
     }
 }
