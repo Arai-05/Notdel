@@ -34,7 +34,6 @@ class NotebookRepository(
     // confirmar arriendo
     suspend fun confirmarArriendo(
         requestDto: ArriendoRequest, // datos para mandarlos a xano
-        notebookInfo: Notebook // datos para guardar en la copia local
     ) {
         // hacer el post
         val respuesta = api.crearArriendo(requestDto)

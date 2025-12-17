@@ -26,8 +26,4 @@ enum class EstadoArriendo(val textoPublico: String, val color: Color) {
     @SerializedName("en_devolucion")
     EN_DEVOLUCION("No Disponible", Color(0xFF9C27B0));
 
-    // Función auxiliar para saber si se puede arrendar
-    fun esArrendable(): Boolean {
-        return this == DISPONIBLE
-    }
 }
